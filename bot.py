@@ -82,7 +82,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
-        if query.data == "claim":
+    
+            if query.data == "claim":
 
         cur.execute(
             "SELECT last_claim FROM users WHERE user_id=?",
