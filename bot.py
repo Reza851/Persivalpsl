@@ -26,6 +26,7 @@ def database():
     CREATE TABLE IF NOT EXISTS users (
         user_id INTEGER PRIMARY KEY,
         coins INTEGER DEFAULT 0,
+        claims INTEGER DEFAULT 0,
         last_claim INTEGER DEFAULT 0
     )
     """)
@@ -49,21 +50,21 @@ def add_user(user_id):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    user = update.effective_user
-    add_user(user.id)
+    user_id = update.effective_user.id
+    add_user(user_id)
 
     keyboard = [
         [InlineKeyboardButton("🎁 دریافت سکه", callback_data="claim")],
         [InlineKeyboardButton("💰 موجودی من", callback_data="balance")],
-        [InlineKeyboardButton("👥 دعوت دوستان", callback_data="invite")],
-        [InlineKeyboardButton("🔗 اتصال کیف پول", callback_data="wallet")],
-        [InlineKeyboardButton("📢 کانال", url="https://t.me/YourChannel")]
+        [InlineKeyboardButton("👤 پروفایل من", callback_data="profile")],
+        [InlineKeyboardButton("📜 قوانین ایردراپ", callback_data="rules")],
+        [InlineKeyboardButton("🔗 اتصال کیف پول", callback_data="wallet")]
     ]
 
     await update.message.reply_text(
         "🎁 Percival Airdrop\n\n"
         "به ایردراپ پرسیوال خوش آمدید.\n"
-        "سکه دریافت کنید و دوستان خود را دعوت کنید.",
+        "هر ۶ ساعت ۲۰۰۰ سکه دریافت کنید.",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -92,14 +93,20 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if now - last >= COOLDOWN:
 
             cur.execute(
-                "UPDATE users SET coins=coins+?, last_claim=? WHERE user_id=?",
+                """
+                UPDATE users
+                SET coins=coins+?,
+                    claims=claims+1,
+                    last_claim=?
+                WHERE user_id=?
+                """,
                 (REWARD, now, user_id)
             )
 
             conn.commit()
 
             await query.message.reply_text(
-                "✅ 2000 سکه دریافت شد!"
+                "✅ ۲۰۰۰ سکه دریافت شد."
             )
 
         else:
@@ -107,7 +114,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             hours = remain // 3600
 
             await query.message.reply_text(
-                f"⏳ هنوز آماده نیست.\nزمان باقی‌مانده: {hours} ساعت"
+                f"⏳ هنوز آماده نیست.\n"
+                f"زمان باقی‌مانده: {hours} ساعت"
             )
 
 
@@ -125,18 +133,37 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-    elif query.data == "invite":
+    elif query.data == "profile":
+
+        cur.execute(
+            "SELECT coins, claims FROM users WHERE user_id=?",
+            (user_id,)
+        )
+
+        data = cur.fetchone()
 
         await query.message.reply_text(
-            "👥 لینک دعوت شما:\n"
-            f"https://t.me/YOUR_BOT_USERNAME?start={user_id}"
+            "👤 پروفایل Percival\n\n"
+            f"💰 موجودی: {data[0]} سکه\n"
+            f"🎁 تعداد دریافت: {data[1]} بار\n"
+            f"🆔 شناسه: {user_id}"
+        )
+
+
+    elif query.data == "rules":
+
+        await query.message.reply_text(
+            "📜 قوانین Percival Airdrop\n\n"
+            "• هر کاربر هر ۶ ساعت ۲۰۰۰ سکه دریافت می‌کند.\n"
+            "• دعوت دوستان وجود ندارد.\n"
+            "• همه کاربران شرایط یکسان دارند."
         )
 
 
     elif query.data == "wallet":
 
         await query.message.reply_text(
-            "🔗 اتصال کیف پول در مرحله بعد اضافه می‌شود."
+            "🔗 اتصال کیف پول در مراحل بعد اضافه خواهد شد."
         )
 
 
