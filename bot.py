@@ -51,7 +51,6 @@ def add_user(user_id):
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
-
     add_user(user_id)
 
     keyboard = [
@@ -73,17 +72,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     query = update.callback_query
-
     await query.answer()
 
     user_id = query.from_user.id
-
     add_user(user_id)
 
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
-    
-            if query.data == "claim":
+
+    if query.data == "claim":
 
         cur.execute(
             "SELECT last_claim FROM users WHERE user_id=?",
@@ -91,7 +88,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         last = cur.fetchone()[0]
-
         now = int(time.time())
 
         if now - last >= COOLDOWN:
@@ -99,10 +95,10 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cur.execute(
                 """
                 UPDATE users
-                SET coins = coins + ?,
-                    claims = claims + 1,
-                    last_claim = ?
-                WHERE user_id = ?
+                SET coins=coins+?,
+                    claims=claims+1,
+                    last_claim=?
+                WHERE user_id=?
                 """,
                 (REWARD, now, user_id)
             )
@@ -110,19 +106,16 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             conn.commit()
 
             await query.message.reply_text(
-                "✅ ۲۰۰۰ سکه به حساب شما اضافه شد."
+                "✅ ۲۰۰۰ سکه دریافت شد."
             )
 
         else:
-
             remain = COOLDOWN - (now - last)
-
             hours = remain // 3600
-            minutes = (remain % 3600) // 60
 
             await query.message.reply_text(
                 f"⏳ هنوز آماده نیست.\n"
-                f"زمان باقی‌مانده: {hours} ساعت و {minutes} دقیقه"
+                f"زمان باقی‌مانده: {hours} ساعت"
             )
 
 
@@ -162,7 +155,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(
             "📜 قوانین Percival Airdrop\n\n"
             "• هر کاربر هر ۶ ساعت ۲۰۰۰ سکه دریافت می‌کند.\n"
-            "• سیستم دعوت وجود ندارد.\n"
+            "• دعوت دوستان وجود ندارد.\n"
             "• همه کاربران شرایط یکسان دارند."
         )
 
@@ -170,7 +163,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "wallet":
 
         await query.message.reply_text(
-            "🔗 اتصال کیف پول در مرحله بعد فعال خواهد شد."
+            "🔗 اتصال کیف پول در مراحل بعد اضافه خواهد شد."
         )
 
 
@@ -184,10 +177,7 @@ def main():
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-
-    app.add_handler(
-        CallbackQueryHandler(button)
-    )
+    app.add_handler(CallbackQueryHandler(button))
 
     app.run_polling()
 
