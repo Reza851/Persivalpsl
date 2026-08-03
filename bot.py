@@ -62,7 +62,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     [InlineKeyboardButton("🔗 اتصال کیف پول", callback_data="wallet")]
 ]
 
-if user_id == ADMIN_ID:
+    if user_id == ADMIN_ID:
     keyboard.append(
         [InlineKeyboardButton("👑 مدیریت", callback_data="admin")]
     )
