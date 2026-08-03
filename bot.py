@@ -12,6 +12,7 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
+ADMIN_ID = 8181107477
 DB = "users.db"
 
 REWARD = 2000
@@ -54,12 +55,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     add_user(user_id)
 
     keyboard = [
-        [InlineKeyboardButton("🎁 دریافت سکه", callback_data="claim")],
-        [InlineKeyboardButton("💰 موجودی من", callback_data="balance")],
-        [InlineKeyboardButton("👤 پروفایل من", callback_data="profile")],
-        [InlineKeyboardButton("📜 قوانین ایردراپ", callback_data="rules")],
-        [InlineKeyboardButton("🔗 اتصال کیف پول", callback_data="wallet")]
-    ]
+    [InlineKeyboardButton("🎁 دریافت سکه", callback_data="claim")],
+    [InlineKeyboardButton("💰 موجودی من", callback_data="balance")],
+    [InlineKeyboardButton("👤 پروفایل من", callback_data="profile")],
+    [InlineKeyboardButton("📜 قوانین ایردراپ", callback_data="rules")],
+    [InlineKeyboardButton("🔗 اتصال کیف پول", callback_data="wallet")]
+]
+
+if user_id == ADMIN_ID:
+    keyboard.append(
+        [InlineKeyboardButton("👑 مدیریت", callback_data="admin")]
+    )
 
     await update.message.reply_text(
         "🎁 Percival Airdrop\n\n"
@@ -168,7 +174,27 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     conn.close()
+elif query.data == "admin":
 
+    if user_id != ADMIN_ID:
+        await query.message.reply_text("⛔ دسترسی ندارید.")
+        return
+
+    cur.execute("SELECT COUNT(*) FROM users")
+    users = cur.fetchone()[0]
+
+    cur.execute("SELECT SUM(coins) FROM users")
+    coins = cur.fetchone()[0] or 0
+
+    cur.execute("SELECT SUM(claims) FROM users")
+    claims = cur.fetchone()[0] or 0
+
+    await query.message.reply_text(
+        "👑 پنل مدیریت Percival\n\n"
+        f"👥 کاربران: {users}\n"
+        f"🪙 مجموع سکه‌ها: {coins}\n"
+        f"🎁 تعداد دریافت‌ها: {claims}"
+    )
 
 def main():
 
