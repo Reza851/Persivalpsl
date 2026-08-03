@@ -173,32 +173,30 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+    elif query.data == "admin":
+
+        if user_id != ADMIN_ID:
+            await query.message.reply_text("⛔ دسترسی ندارید.")
+            return
+
+        cur.execute("SELECT COUNT(*) FROM users")
+        users = cur.fetchone()[0]
+
+        cur.execute("SELECT SUM(coins) FROM users")
+        coins = cur.fetchone()[0] or 0
+
+        cur.execute("SELECT SUM(claims) FROM users")
+        claims = cur.fetchone()[0] or 0
+
+        await query.message.reply_text(
+            "👑 پنل مدیریت Percival\n\n"
+            f"👥 کاربران: {users}\n"
+            f"🪙 مجموع سکه‌ها: {coins}\n"
+            f"🎁 تعداد دریافت‌ها: {claims}"
+        )
+
+
     conn.close()
-
-
-
-
-elif query.data == "admin":
-
-    if user_id != ADMIN_ID:
-        await query.message.reply_text("⛔ دسترسی ندارید.")
-        return
-
-    cur.execute("SELECT COUNT(*) FROM users")
-    users = cur.fetchone()[0]
-
-    cur.execute("SELECT SUM(coins) FROM users")
-    coins = cur.fetchone()[0] or 0
-
-    cur.execute("SELECT SUM(claims) FROM users")
-    claims = cur.fetchone()[0] or 0
-
-    await query.message.reply_text(
-        "👑 پنل مدیریت Percival\n\n"
-        f"👥 کاربران: {users}\n"
-        f"🪙 مجموع سکه‌ها: {coins}\n"
-        f"🎁 تعداد دریافت‌ها: {claims}"
-    )
 
 def main():
 
