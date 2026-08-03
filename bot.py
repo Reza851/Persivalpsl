@@ -12,6 +12,8 @@ from telegram.ext import (
 
 TOKEN = os.getenv("BOT_TOKEN")
 
+ADMIN_ID = 8181107477
+
 DB = "users.db"
 
 REWARD = 2000
@@ -33,8 +35,7 @@ def database():
 
     conn.commit()
     conn.close()
-
-
+    
 def add_user(user_id):
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
@@ -42,9 +43,31 @@ def add_user(user_id):
     cur.execute(
         "INSERT OR IGNORE INTO users(user_id) VALUES(?)",
         (user_id,)
-    )
-
+    
     conn.commit()
+    
+        elif query.data == "admin":
+
+        if user_id != ADMIN_ID:
+            await query.message.reply_text("⛔ شما دسترسی ندارید.")
+        else:
+
+            cur.execute("SELECT COUNT(*) FROM users")
+            users = cur.fetchone()[0]
+
+            cur.execute("SELECT SUM(coins) FROM users")
+            total_coins = cur.fetchone()[0] or 0
+
+            cur.execute("SELECT SUM(claims) FROM users")
+            total_claims = cur.fetchone()[0] or 0
+
+            await query.message.reply_text(
+                "👑 پنل مدیریت\n\n"
+                f"👥 تعداد کاربران: {users}\n"
+                f"💰 مجموع سکه‌ها: {total_coins}\n"
+                f"🎁 تعداد کل دریافت‌ها: {total_claims}"
+            )
+            
     conn.close()
 
 
@@ -60,7 +83,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📜 قوانین ایردراپ", callback_data="rules")],
         [InlineKeyboardButton("🔗 اتصال کیف پول", callback_data="wallet")]
     ]
-
+    if user_id == ADMIN_ID:
+        keyboard.append(
+            [InlineKeyboardButton("👑 مدیریت", callback_data="admin")]
+        )
+        
     await update.message.reply_text(
         "🎁 Percival Airdrop\n\n"
         "به ایردراپ پرسیوال خوش آمدید.\n"
